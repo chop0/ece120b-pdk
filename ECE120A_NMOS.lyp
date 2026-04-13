@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-properties>
+
+ <properties>
+  <frame-color>#3B6D11</frame-color>
+  <fill-color>#97C459</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I5</dither-pattern>
+  <line-style>I0</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>DIFF - Diffusion windows</name>
+  <source>1/0</source>
+ </properties>
+
+ <properties>
+  <frame-color>#185FA5</frame-color>
+  <fill-color>#85B7EB</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I9</dither-pattern>
+  <line-style>I0</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>GATE - Gate oxide windows</name>
+  <source>2/0</source>
+ </properties>
+
+ <properties>
+  <frame-color>#993556</frame-color>
+  <fill-color>#ED93B1</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I2</dither-pattern>
+  <line-style>I0</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>VIA - Source/drain/body vias</name>
+  <source>3/0</source>
+ </properties>
+
+ <properties>
+  <frame-color>#5F5E5A</frame-color>
+  <fill-color>#B4B2A9</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I0</dither-pattern>
+  <line-style>I0</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>METAL - Aluminum interconnect</name>
+  <source>4/0</source>
+ </properties>
+
+ <properties>
+  <frame-color>#854F0B</frame-color>
+  <fill-color>#FAC775</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I3</dither-pattern>
+  <line-style>I0</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>ALIGN - Alignment marks</name>
+  <source>10/0</source>
+ </properties>
+
+ <properties>
+  <frame-color>#534AB7</frame-color>
+  <fill-color>#EEEDFE</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I1</dither-pattern>
+  <line-style>I5</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>OUTLINE - Die boundary</name>
+  <source>100/0</source>
+ </properties>
+
+ <properties>
+  <frame-color>#888780</frame-color>
+  <fill-color>#D3D1C7</fill-color>
+  <frame-brightness>0</frame-brightness>
+  <fill-brightness>0</fill-brightness>
+  <dither-pattern>I0</dither-pattern>
+  <line-style>I0</line-style>
+  <valid>true</valid>
+  <visible>true</visible>
+  <transparent>false</transparent>
+  <width>1</width>
+  <marked>false</marked>
+  <xfill>false</xfill>
+  <animation>0</animation>
+  <name>TEXT - Labels and annotations</name>
+  <source>200/0</source>
+ </properties>
+
+</layer-properties>
