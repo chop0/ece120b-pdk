@@ -29,6 +29,8 @@ from vernier import Vernier
 from alignment import AlignmentMark
 from crossover import CrossoverVia
 from rotation import RotationVernier
+from moire import AlignMoireRotation
+from moire_circles import AlignMoireLinear
 
 
 class ECE120A_NMOS_Library(pya.Library):
@@ -40,6 +42,8 @@ class ECE120A_NMOS_Library(pya.Library):
         self.layout().register_pcell("AlignmentMark", AlignmentMark())
         self.layout().register_pcell("CrossoverVia", CrossoverVia())
         self.layout().register_pcell("RotationVernier", RotationVernier())
+        self.layout().register_pcell("AlignMoireRotation", AlignMoireRotation())
+        self.layout().register_pcell("AlignMoireLinear", AlignMoireLinear())
         self.register("ECE120A_NMOS")
 
 ECE120A_NMOS_Library()
