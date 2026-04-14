@@ -4,7 +4,7 @@
  <description/>
  <group/>
  <dbu>0.001</dbu>
- <default-grids/>
+ <default-grids>0.5,1</default-grids>
  <base-path/>
  <original-base-path>/Users/alec/.klayout/tech/ECE120A_NMOS</original-base-path>
  <layer-properties_file>ECE120A_NMOS.lyp</layer-properties_file>
