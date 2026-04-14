@@ -28,9 +28,14 @@ from tlm import TLM
 from vernier import Vernier
 from alignment import AlignmentMark
 from crossover import CrossoverVia
-from rotation import RotationVernier
 from moire import AlignMoireRotation
 from moire_circles import AlignMoireLinear
+from diffraction import DiffractionGrating
+from current_mirror import CurrentMirror
+from vanderpaw import VanDerPauw
+from koch import KochSnowflake
+from resolution import ResolutionChart
+from process_monitor import ProcessMonitor
 
 
 class ECE120A_NMOS_Library(pya.Library):
@@ -41,9 +46,14 @@ class ECE120A_NMOS_Library(pya.Library):
         self.layout().register_pcell("Vernier", Vernier())
         self.layout().register_pcell("AlignmentMark", AlignmentMark())
         self.layout().register_pcell("CrossoverVia", CrossoverVia())
-        self.layout().register_pcell("RotationVernier", RotationVernier())
         self.layout().register_pcell("AlignMoireRotation", AlignMoireRotation())
         self.layout().register_pcell("AlignMoireLinear", AlignMoireLinear())
+        self.layout().register_pcell("DiffractionGrating", DiffractionGrating())
+        self.layout().register_pcell("CurrentMirror", CurrentMirror())
+        self.layout().register_pcell("VanDerPauw", VanDerPauw())
+        self.layout().register_pcell("KochSnowflake", KochSnowflake())
+        self.layout().register_pcell("ResolutionChart", ResolutionChart())
+        self.layout().register_pcell("ProcessMonitor", ProcessMonitor())
         self.register("ECE120A_NMOS")
 
 ECE120A_NMOS_Library()

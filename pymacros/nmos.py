@@ -12,6 +12,7 @@ class NMOS(pya.PCellDeclarationHelper):
 
         self.param("via_width", self.TypeDouble, "Via strip width (um)", default=6.0)
 
+        self.param("gen_pads", self.TypeBoolean, "Generate probe pads", default=True)
         self.param("pad_size", self.TypeDouble, "Pad size (um)", default=30.0)
         self.param("pad_gap", self.TypeDouble, "Pad gap from DIFF edge (um)", default=3.0)
         self.param("taper_length", self.TypeDouble, "Taper length (um)", default=10.0)
@@ -58,7 +59,6 @@ class NMOS(pya.PCellDeclarationHelper):
         def poly(layer, pts):
             self.cell.shapes(l[layer]).insert(pya.Polygon([pya.Point(x, y) for x, y in pts]))
 
-        # key coords
         dw = 2 * sd + gl
         dx1, dx2 = -dw/2, dw/2
         dy1, dy2 = -gw/2, gw/2
@@ -69,15 +69,18 @@ class NMOS(pya.PCellDeclarationHelper):
         sv = vw / 2
         hw = tw / 2
 
-        # DIFF
         box("diff", dx1, dy1, dx2, dy2)
-
-        # GATE
         box("gate", gx1, dy1, gx2, dy2)
 
-        # VIA strips
+        # via + metal on source, drain, gate
         box("via", src_cx - sv, dy1, src_cx + sv, dy2)
         box("via", drn_cx - sv, dy1, drn_cx + sv, dy2)
+        box("metal", src_cx - sv, dy1, src_cx + sv, dy2)
+        box("metal", drn_cx - sv, dy1, drn_cx + sv, dy2)
+        box("metal", gx1, dy1, gx2, dy2)
+
+        if not self.gen_pads:
+            return
 
         # body via
         dpx1 = dx2 + pg
