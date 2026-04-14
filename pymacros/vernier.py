@@ -67,5 +67,11 @@ class Vernier(pya.PCellDeclarationHelper):
             ]))
 
             if major:
-                label(li_ref, x, gap/2 + h + u(2), str(abs(i)))
-                label(li_align, x, -gap/2 - h - lsz - u(2), str(abs(i)))
+                um_val = abs(i) * self.pitch
+                txt = "{:.0f}u".format(um_val) if um_val == int(um_val) else "{:.1f}u".format(um_val)
+                label(li_ref, x, gap/2 + h + u(2), txt)
+                label(li_align, x, -gap/2 - h - lsz - u(2), txt)
+
+        # title text to the right
+        total_w = n * p
+        label(li_ref, total_w + u(10), gap/2 + tl/2, "Min. tick {:.1f}u".format(self.pitch))

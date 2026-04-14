@@ -13,6 +13,7 @@ class AlignmentMark(pya.PCellDeclarationHelper):
         self.param("outline_wall", self.TypeDouble, "Outline wall thickness (um)", default=10.0)
         self.param("fiducial_size", self.TypeDouble, "Fiducial square size (um)", default=4.0)
         self.param("fiducial_gap", self.TypeDouble, "Fiducial gap (um)", default=1.5)
+        self.param("label_size", self.TypeDouble, "Label text size (um)", default=8.0)
         self.param("spacing", self.TypeDouble, "Spacing between marks (um)", default=250.0)
 
         self.param("l_diff", self.TypeLayer, "DIFF layer", default=pya.LayerInfo(1, 0))
@@ -48,14 +49,12 @@ class AlignmentMark(pya.PCellDeclarationHelper):
         wall = u(self.outline_wall)
         fsz  = u(self.fiducial_size)
         fg   = u(self.fiducial_gap)
+        lsz  = u(self.label_size)
         sp   = u(self.spacing)
 
-        layers = [
-            self.cell.layout().layer(self.l_diff),
-            self.cell.layout().layer(self.l_gate),
-            self.cell.layout().layer(self.l_via),
-            self.cell.layout().layer(self.l_metal),
-        ]
+        layer_infos = [self.l_diff, self.l_gate, self.l_via, self.l_metal]
+        layers = [self.cell.layout().layer(li) for li in layer_infos]
+        names = ["1", "2", "3", "4"]
 
         def insert_region(li, region):
             for p in region.each():
@@ -63,6 +62,11 @@ class AlignmentMark(pya.PCellDeclarationHelper):
 
         def box(li, x1, y1, x2, y2):
             self.cell.shapes(li).insert(pya.Box(x1, y1, x2, y2))
+
+        def label(li, x, y, text):
+            t = pya.Text(text, pya.Trans(pya.Point(x, y)))
+            t.size = lsz
+            self.cell.shapes(li).insert(t)
 
         marks = [
             (2, 0, 0, 1),
@@ -77,21 +81,20 @@ class AlignmentMark(pya.PCellDeclarationHelper):
         hw_out = (aw + 2 * (clr + wall)) / 2
         corner_center_offset = (hw_gap + hw_out) / 2
         pocket = fsz + 2 * fg
+        outer_arm = arm + clr + wall
+        outer_hp = (aw + 2*(clr + wall) + 2*(tip + wall)) / 2
 
         for col, row, inner_idx, outer_idx in marks:
             cx = col * sp
             cy = -row * sp
 
-            # inner solid cross
             solid = self._cross_region(cx, cy, arm, aw, tip)
             insert_region(layers[inner_idx], solid)
 
-            # outer frame
             outer_cross = self._cross_region(cx, cy, arm + clr + wall, aw + 2*(clr + wall), tip + wall)
             gap_cross = self._cross_region(cx, cy, arm + clr, aw + 2*clr, tip + clr)
             frame = outer_cross - gap_cross
 
-            # cut tight pockets at the 4 elbows
             for sx, sy in [(1,1), (1,-1), (-1,1), (-1,-1)]:
                 ecx = cx + sx * corner_center_offset
                 ecy = cy + sy * corner_center_offset
@@ -101,9 +104,14 @@ class AlignmentMark(pya.PCellDeclarationHelper):
 
             insert_region(layers[outer_idx], frame)
 
-            # inner layer squares inside pockets
             for sx, sy in [(1,1), (1,-1), (-1,1), (-1,-1)]:
                 ecx = cx + sx * corner_center_offset
                 ecy = cy + sy * corner_center_offset
                 box(layers[inner_idx], ecx - fsz/2, ecy - fsz/2,
                     ecx + fsz/2, ecy + fsz/2)
+
+            # label centered below each mark
+            label_y = cy - outer_arm - outer_hp - u(20)
+            txt = "In:{} Out:{}".format(names[inner_idx], names[outer_idx])
+            text_w = len(txt) * lsz * 0.6
+            label(layers[inner_idx], cx - text_w / 2, label_y, txt)
