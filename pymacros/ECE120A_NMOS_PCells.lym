@@ -28,6 +28,7 @@ from tlm import TLM
 from vernier import Vernier
 from alignment import AlignmentMark
 from crossover import CrossoverVia
+from rotation import RotationVernier
 
 
 class ECE120A_NMOS_Library(pya.Library):
@@ -38,6 +39,7 @@ class ECE120A_NMOS_Library(pya.Library):
         self.layout().register_pcell("Vernier", Vernier())
         self.layout().register_pcell("AlignmentMark", AlignmentMark())
         self.layout().register_pcell("CrossoverVia", CrossoverVia())
+        self.layout().register_pcell("RotationVernier", RotationVernier())
         self.register("ECE120A_NMOS")
 
 ECE120A_NMOS_Library()

@@ -9,9 +9,11 @@ class AlignmentMark(pya.PCellDeclarationHelper):
         self.param("arm_length", self.TypeDouble, "Cross arm length (um)", default=40.0)
         self.param("arm_width", self.TypeDouble, "Cross arm width (um)", default=15.0)
         self.param("tip_pad", self.TypeDouble, "Extra pad at arm tips (um)", default=8.0)
-        self.param("clearance", self.TypeDouble, "Gap between inner and outline (um)", default=3.0)
-        self.param("outline_wall", self.TypeDouble, "Outline wall thickness (um)", default=5.0)
-        self.param("spacing", self.TypeDouble, "Spacing between marks (um)", default=180.0)
+        self.param("clearance", self.TypeDouble, "Inner-to-outer gap (um)", default=3.0)
+        self.param("outline_wall", self.TypeDouble, "Outline wall thickness (um)", default=10.0)
+        self.param("fiducial_size", self.TypeDouble, "Fiducial square size (um)", default=4.0)
+        self.param("fiducial_gap", self.TypeDouble, "Fiducial gap (um)", default=1.5)
+        self.param("spacing", self.TypeDouble, "Spacing between marks (um)", default=250.0)
 
         self.param("l_diff", self.TypeLayer, "DIFF layer", default=pya.LayerInfo(1, 0))
         self.param("l_gate", self.TypeLayer, "GATE layer", default=pya.LayerInfo(2, 0))
@@ -44,6 +46,8 @@ class AlignmentMark(pya.PCellDeclarationHelper):
         tip  = u(self.tip_pad)
         clr  = u(self.clearance)
         wall = u(self.outline_wall)
+        fsz  = u(self.fiducial_size)
+        fg   = u(self.fiducial_gap)
         sp   = u(self.spacing)
 
         layers = [
@@ -57,6 +61,9 @@ class AlignmentMark(pya.PCellDeclarationHelper):
             for p in region.each():
                 self.cell.shapes(li).insert(p)
 
+        def box(li, x1, y1, x2, y2):
+            self.cell.shapes(li).insert(pya.Box(x1, y1, x2, y2))
+
         marks = [
             (2, 0, 0, 1),
             (1, 0, 0, 2),
@@ -66,14 +73,37 @@ class AlignmentMark(pya.PCellDeclarationHelper):
             (0, 2, 2, 3),
         ]
 
+        hw_gap = (aw + 2 * clr) / 2
+        hw_out = (aw + 2 * (clr + wall)) / 2
+        corner_center_offset = (hw_gap + hw_out) / 2
+        pocket = fsz + 2 * fg
+
         for col, row, inner_idx, outer_idx in marks:
             cx = col * sp
             cy = -row * sp
 
+            # inner solid cross
             solid = self._cross_region(cx, cy, arm, aw, tip)
             insert_region(layers[inner_idx], solid)
 
+            # outer frame
             outer_cross = self._cross_region(cx, cy, arm + clr + wall, aw + 2*(clr + wall), tip + wall)
             gap_cross = self._cross_region(cx, cy, arm + clr, aw + 2*clr, tip + clr)
             frame = outer_cross - gap_cross
+
+            # cut tight pockets at the 4 elbows
+            for sx, sy in [(1,1), (1,-1), (-1,1), (-1,-1)]:
+                ecx = cx + sx * corner_center_offset
+                ecy = cy + sy * corner_center_offset
+                frame = frame - pya.Region(pya.Box(
+                    ecx - pocket/2, ecy - pocket/2,
+                    ecx + pocket/2, ecy + pocket/2))
+
             insert_region(layers[outer_idx], frame)
+
+            # inner layer squares inside pockets
+            for sx, sy in [(1,1), (1,-1), (-1,1), (-1,-1)]:
+                ecx = cx + sx * corner_center_offset
+                ecy = cy + sy * corner_center_offset
+                box(layers[inner_idx], ecx - fsz/2, ecy - fsz/2,
+                    ecx + fsz/2, ecy + fsz/2)
