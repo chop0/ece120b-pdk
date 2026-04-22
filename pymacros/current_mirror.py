@@ -9,6 +9,7 @@ class CurrentMirror(pya.PCellDeclarationHelper):
         self.param("gate_length", self.TypeDouble, "Gate length (um)", default=10.0)
         self.param("w_ref", self.TypeDouble, "Reference FET width (um)", default=50.0)
         self.param("w_mirror", self.TypeDouble, "Mirror FET width (um)", default=50.0)
+        self.param("n_mirrors", self.TypeInt, "Number of mirror output channels", default=1)
         self.param("sd_ext", self.TypeDouble, "S/D extension (um)", default=20.0)
         self.param("via_width", self.TypeDouble, "Via width (um)", default=6.0)
         self.param("gate_spacing", self.TypeDouble, "Gap between FETs (um)", default=15.0)
@@ -23,7 +24,8 @@ class CurrentMirror(pya.PCellDeclarationHelper):
         self.param("l_metal", self.TypeLayer, "METAL layer", default=pya.LayerInfo(4, 0))
 
     def display_text_impl(self):
-        return "CurrMirror(W1={:.0f} W2={:.0f})".format(self.w_ref, self.w_mirror)
+        return "CurrMirror(N={} W1={:.0f} W2={:.0f})".format(
+            self.n_mirrors, self.w_ref, self.w_mirror)
 
     def produce_impl(self):
         dbu = self.layout.dbu
@@ -37,6 +39,7 @@ class CurrentMirror(pya.PCellDeclarationHelper):
         gs  = u(self.gate_spacing)
         ps  = u(self.pad_size)
         pg  = u(self.pad_gap)
+        n   = max(1, int(self.n_mirrors))
 
         l = {
             "diff":  self.cell.layout().layer(self.l_diff),
@@ -55,29 +58,32 @@ class CurrentMirror(pya.PCellDeclarationHelper):
         src_x = -dw/2 + sd/2
         drn_x = dw/2 - sd/2
 
-        # y layout: mirror bottom, ref top
-        m_bot = 0
-        m_top = wm
-        r_bot = wm + gs
-        r_top = r_bot + wr
+        # y layout: N mirror FETs stacked from bottom, reference FET on top
+        m_bots = [i * (wm + gs) for i in range(n)]
+        m_tops = [b + wm for b in m_bots]
+        m_mids = [(b + t) / 2 for b, t in zip(m_bots, m_tops)]
 
-        # DIFF regions
-        box("diff", -dw/2, m_bot, dw/2, m_top)
+        r_bot = n * (wm + gs)
+        r_top = r_bot + wr
+        r_mid = (r_bot + r_top) / 2
+
+        # DIFF regions for each mirror and the reference
+        for b, t in zip(m_bots, m_tops):
+            box("diff", -dw/2, b, dw/2, t)
         box("diff", -dw/2, r_bot, dw/2, r_top)
 
-        # GATE: continuous strip through both
-        box("gate", -gl/2, m_bot, gl/2, r_top)
+        # GATE: continuous strip through all FETs
+        box("gate", -gl/2, m_bots[0], gl/2, r_top)
 
         # gate metal (no via - gate oxide must stay intact)
-        box("metal", -gl/2, m_bot, gl/2, r_top)
+        box("metal", -gl/2, m_bots[0], gl/2, r_top)
 
-        # mirror source via+metal
-        box("via",  src_x - sv, m_bot, src_x + sv, m_top)
-        box("metal", src_x - sv, m_bot, src_x + sv, m_top)
-
-        # mirror drain via+metal
-        box("via",  drn_x - sv, m_bot, drn_x + sv, m_top)
-        box("metal", drn_x - sv, m_bot, drn_x + sv, m_top)
+        # per-mirror source + drain via/metal
+        for b, t in zip(m_bots, m_tops):
+            box("via",  src_x - sv, b, src_x + sv, t)
+            box("metal", src_x - sv, b, src_x + sv, t)
+            box("via",  drn_x - sv, b, drn_x + sv, t)
+            box("metal", drn_x - sv, b, drn_x + sv, t)
 
         # ref source via+metal
         box("via",  src_x - sv, r_bot, src_x + sv, r_top)
@@ -88,7 +94,6 @@ class CurrentMirror(pya.PCellDeclarationHelper):
         box("metal", drn_x - sv, r_bot, drn_x + sv, r_top)
 
         # diode-connect: metal bridge ref drain to gate (at ref center)
-        r_mid = (r_bot + r_top) / 2
         box("metal", -gl/2, r_mid - sv, drn_x + sv, r_mid + sv)
 
         if not self.gen_pads:
@@ -98,16 +103,15 @@ class CurrentMirror(pya.PCellDeclarationHelper):
         box("metal", -dw/2 - pg - ps, r_mid - ps/2, -dw/2 - pg, r_mid + ps/2)
         box("metal", -dw/2 - pg, r_mid - sv, src_x - sv, r_mid + sv)
 
-        # mirror source pad (left)
-        m_mid = (m_bot + m_top) / 2
-        box("metal", -dw/2 - pg - ps, m_mid - ps/2, -dw/2 - pg, m_mid + ps/2)
-        box("metal", -dw/2 - pg, m_mid - sv, src_x - sv, m_mid + sv)
+        # mirror source pads (left) and drain pads (right) - one per mirror
+        for mid in m_mids:
+            box("metal", -dw/2 - pg - ps, mid - ps/2, -dw/2 - pg, mid + ps/2)
+            box("metal", -dw/2 - pg, mid - sv, src_x - sv, mid + sv)
 
-        # mirror drain pad (right)
-        box("metal", dw/2 + pg, m_mid - ps/2, dw/2 + pg + ps, m_mid + ps/2)
-        box("metal", drn_x + sv, m_mid - sv, dw/2 + pg, m_mid + sv)
+            box("metal", dw/2 + pg, mid - ps/2, dw/2 + pg + ps, mid + ps/2)
+            box("metal", drn_x + sv, mid - sv, dw/2 + pg, mid + sv)
 
-        # gate pad (right, vertically centered between FETs)
-        g_mid = (m_top + r_bot) / 2
+        # gate pad (right, in gap between top-most mirror and reference)
+        g_mid = (m_tops[-1] + r_bot) / 2
         box("metal", dw/2 + pg, g_mid - ps/2, dw/2 + pg + ps, g_mid + ps/2)
         box("metal", gl/2, g_mid - sv, dw/2 + pg, g_mid + sv)
