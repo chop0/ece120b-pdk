@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<klayout-macro>
+ <description/>
+ <version/>
+ <category>drc</category>
+ <prolog/>
+ <epilog/>
+ <doc/>
+ <autorun>false</autorun>
+ <autorun-early>false</autorun-early>
+ <priority>0</priority>
+ <shortcut/>
+ <show-in-menu>true</show-in-menu>
+ <group-name>drc_scripts</group-name>
+ <menu-path>tools_menu.drc.end</menu-path>
+ <interpreter>dsl</interpreter>
+ <dsl-interpreter-name>drc-dsl-xml</dsl-interpreter-name>
+ <text>DIFFUSION_SPACE = 3.um
+DIFFUSION_WIDTH = 3.um
+GATE_OXIDE_SPACE = 2.um
+GATE_OXIDE_WIDTH = 2.um
+VIA_SPACE = 2.um
+VIA_WIDTH = 2.um
+METAL_SPACE = 2.um
+METAL_WIDTH = 2.um
+METAL_CONTAIN_GATE = 1.5.um
+METAL_CONTAIN_VIA = 1.5.um
+DIFF_CONTAIN_VIA = 1.5.um
+
+report("Starting DRC")
+
+diffusion1 = input(1,0)
+diffusion2 = input(1,0) #input(2,0) uncomment for more diffusion layers
+
+all_diffusion = diffusion1 | diffusion2
+
+all_diffusion.space(DIFFUSION_SPACE).output("diffusion_space", "diffusion spacing violations")
+all_diffusion.width(DIFFUSION_WIDTH).output("diffusion_width", "diffusion width violations")
+
+
+gate = input(2,0)
+gate.width(GATE_OXIDE_WIDTH).output("gate_width", "gate width violations")
+gate.space(GATE_OXIDE_SPACE).output("gate_space", "gate space violations")
+
+
+via = input(3,0)
+via.width(VIA_WIDTH).output("via_width", "via width violations")
+via.space(VIA_SPACE).output("via_space", "via space violations")
+
+
+metal = input(4,0)
+metal.width(METAL_WIDTH).output("metal_width", "metal width violations")
+metal.space(METAL_SPACE).output("metal_space", "metal space violations")
+
+
+cand = via.overlapping(all_diffusion)
+full = via.inside(all_diffusion) | via.outside(all_diffusion)
+partial = cand - full
+partial.output("VIA_STRADDLE", "Via connected to both n and P doped region")
+
+viagate = via.overlapping(gate)
+viagate.output("VIA_GATE_COLLISION", "via overlapping with gate oxide")
+
+
+passg = gate.inside(metal.sized(-METAL_CONTAIN_GATE))
+failg = gate - passg
+failg.output("GATE_NOT_ENCLOSED",
+            "Gate enclosure by metal &lt; #{METAL_CONTAIN_GATE}um")
+
+
+passv = via.inside(metal.sized(-METAL_CONTAIN_VIA)) 
+failv = via - passv
+failv.output("VIA_NOT_ENCLOSED",
+            "Via enclosure by metal &lt; #{METAL_CONTAIN_VIA}um")
+
+
+passd = via.inside(all_diffusion.sized(-DIFF_CONTAIN_VIA))
+faild = via - passd
+faild.output("VIA_NOT_ENCLOSED_DIFF",
+            "Via enclosure by Diffusion region &lt; #{DIFF_CONTAIN_VIA}um. Ignore for p-doped contacts")</text>
+</klayout-macro>

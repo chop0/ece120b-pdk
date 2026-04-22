@@ -17,7 +17,7 @@
  <dsl-interpreter-name/>
  <text>
 import pya
-import os, sys
+import os, sys, glob
 
 _dir = os.path.dirname(__file__)
 if _dir not in sys.path:
@@ -36,6 +36,10 @@ from vanderpaw import VanDerPauw
 from koch import KochSnowflake
 from resolution import ResolutionChart
 from process_monitor import ProcessMonitor
+from via import Via
+from resistor import Resistor
+from c_resistor import CorneredResistor
+from capacitor import Capacitor
 
 
 class ECE120A_NMOS_Library(pya.Library):
@@ -54,6 +58,15 @@ class ECE120A_NMOS_Library(pya.Library):
         self.layout().register_pcell("KochSnowflake", KochSnowflake())
         self.layout().register_pcell("ResolutionChart", ResolutionChart())
         self.layout().register_pcell("ProcessMonitor", ProcessMonitor())
+        self.layout().register_pcell("Via", Via())
+        self.layout().register_pcell("Resistor", Resistor())
+        self.layout().register_pcell("CorneredResistor", CorneredResistor())
+        self.layout().register_pcell("Capacitor", Capacitor())
+        # Load static cells from cells/ directory
+        cells_dir = os.path.join(_dir, "..", "cells")
+        if os.path.isdir(cells_dir):
+            for gds in sorted(glob.glob(os.path.join(cells_dir, "*.gds"))):
+                self.layout().read(gds)
         self.register("ECE120A_NMOS")
 
 ECE120A_NMOS_Library()
