@@ -9,7 +9,8 @@ class KochSnowflake(pya.PCellDeclarationHelper):
 
         self.param("size", self.TypeDouble, "Side length (um)", default=300.0)
         self.param("iterations", self.TypeInt, "Fractal iterations", default=4)
-        self.param("line_width", self.TypeDouble, "Line width (um)", default=3.0)
+        self.param("line_width", self.TypeDouble, "Ring width (um, 0=filled)", default=3.0)
+        self.param("filled", self.TypeBoolean, "Fill solid (ignore ring width)", default=False)
 
         self.param("l_metal", self.TypeLayer, "Layer", default=pya.LayerInfo(4, 0))
 
@@ -26,9 +27,10 @@ class KochSnowflake(pya.PCellDeclarationHelper):
         a = (p1[0] + dx/3, p1[1] + dy/3)
         b = (p1[0] + dx*2/3, p1[1] + dy*2/3)
 
-        # peak of equilateral triangle on the middle segment
-        mx = (a[0] + b[0])/2 - (b[1] - a[1]) * math.sqrt(3)/2
-        my = (a[1] + b[1])/2 + (b[0] - a[0]) * math.sqrt(3)/2
+        # peak of equilateral triangle on the middle segment, pointing
+        # outward for a CCW-wound base triangle
+        mx = (a[0] + b[0])/2 + (b[1] - a[1]) * math.sqrt(3)/2
+        my = (a[1] + b[1])/2 - (b[0] - a[0]) * math.sqrt(3)/2
         peak = (mx, my)
 
         pts = []
@@ -48,7 +50,7 @@ class KochSnowflake(pya.PCellDeclarationHelper):
 
         li = self.cell.layout().layer(self.l_metal)
 
-        # equilateral triangle vertices (centered)
+        # equilateral triangle vertices, CCW, centered on centroid
         h = sz * math.sqrt(3) / 2
         v0 = (-sz/2, -h/3)
         v1 = (sz/2, -h/3)
@@ -59,31 +61,12 @@ class KochSnowflake(pya.PCellDeclarationHelper):
         for p1, p2 in edges:
             all_pts += self._koch_points(p1, p2, n)
 
-        # thicken the fractal outline into a polygon by offsetting inward/outward
-        pts = all_pts
-        num = len(pts)
-        outer = []
-        inner = []
+        poly_pts = [pya.Point(int(round(x)), int(round(y))) for x, y in all_pts]
+        outer_poly = pya.Polygon(poly_pts)
 
-        for i in range(num):
-            p0 = pts[(i - 1) % num]
-            p1 = pts[i]
-            p2 = pts[(i + 1) % num]
-
-            # average normal direction at this vertex
-            dx1, dy1 = p1[0] - p0[0], p1[1] - p0[1]
-            dx2, dy2 = p2[0] - p1[0], p2[1] - p1[1]
-            l1 = math.sqrt(dx1*dx1 + dy1*dy1) or 1
-            l2 = math.sqrt(dx2*dx2 + dy2*dy2) or 1
-
-            nx = -(dy1/l1 + dy2/l2) / 2
-            ny = (dx1/l1 + dx2/l2) / 2
-            nl = math.sqrt(nx*nx + ny*ny) or 1
-            nx /= nl
-            ny /= nl
-
-            outer.append(pya.Point(p1[0] + nx * lw/2, p1[1] + ny * lw/2))
-            inner.append(pya.Point(p1[0] - nx * lw/2, p1[1] - ny * lw/2))
-
-        inner.reverse()
-        self.cell.shapes(li).insert(pya.Polygon(outer + inner))
+        if self.filled or lw <= 0:
+            self.cell.shapes(li).insert(outer_poly)
+        else:
+            region = pya.Region(outer_poly)
+            inner = region.sized(-int(round(lw)))
+            self.cell.shapes(li).insert(region - inner)
