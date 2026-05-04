@@ -10,7 +10,6 @@ class Vernier(pya.PCellDeclarationHelper):
         self.param("pitch", self.TypeDouble, "Tick pitch (um)", default=10.0)
         self.param("tick_length", self.TypeDouble, "Tick length (um)", default=20.0)
         self.param("tick_width", self.TypeDouble, "Tick width (um)", default=2.0)
-        self.param("tri_size", self.TypeDouble, "Triangle size (um)", default=6.0)
         self.param("gap", self.TypeDouble, "Gap between tick rows (um)", default=4.0)
         self.param("label_size", self.TypeDouble, "Label text size (um)", default=6.0)
 
@@ -30,7 +29,6 @@ class Vernier(pya.PCellDeclarationHelper):
         p   = u(self.pitch)
         tl  = u(self.tick_length)
         tw  = u(self.tick_width)
-        tri = u(self.tri_size)
         gap = u(self.gap)
         lsz = u(self.label_size)
 
@@ -50,21 +48,14 @@ class Vernier(pya.PCellDeclarationHelper):
             major = (i % 5 == 0)
             h = tl if major else tl * 0.6
 
-            box(li_ref, x - tw/2, gap/2, x + tw/2, gap/2 + h)
+            seg_h = h / 3
+            for k in range(3):
+                half_w = round(tw * (k + 1) / 6)
+                y_lo_top = gap/2 + k * seg_h
+                box(li_ref, x - half_w, y_lo_top, x + half_w, y_lo_top + seg_h)
 
-            self.cell.shapes(li_ref).insert(pya.Polygon([
-                pya.Point(x - tri/2, gap/2),
-                pya.Point(x + tri/2, gap/2),
-                pya.Point(x, 0),
-            ]))
-
-            box(li_align, x - tw/2, -gap/2 - h, x + tw/2, -gap/2)
-
-            self.cell.shapes(li_align).insert(pya.Polygon([
-                pya.Point(x - tri/2, -gap/2),
-                pya.Point(x + tri/2, -gap/2),
-                pya.Point(x, 0),
-            ]))
+                y_hi_bot = -gap/2 - k * seg_h
+                box(li_align, x - half_w, y_hi_bot - seg_h, x + half_w, y_hi_bot)
 
             if major:
                 um_val = abs(i) * self.pitch
